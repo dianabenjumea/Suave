@@ -1,0 +1,36 @@
+# Use a base image
+ARG BASE_IMAGE="ghcr.io/kas-lab/suave:latest"
+FROM $BASE_IMAGE
+
+USER root
+
+#Install java
+RUN apt-get update && apt-get install -y \
+    default-jre \
+    default-jdk \
+    snapd \
+    && apt-get clean
+
+#Install IntelliJ IDEA
+ARG IDEA_BUILD=2024.2.2
+
+WORKDIR /opt/idea
+
+RUN wget "https://download.jetbrains.com/idea/ideaIU-${IDEA_BUILD}.tar.gz" \
+    && tar -xzf "ideaIU-${IDEA_BUILD}.tar.gz" --strip-components=1 -C /opt/idea \
+    && rm "ideaIU-${IDEA_BUILD}.tar.gz"
+
+ENV PATH="/opt/idea/bin:${PATH}"
+
+#------------------------------
+
+###Add the USER env var
+RUN echo 'kasm-user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+ENV HOME /home/kasm-user
+USER kasm-user
+ENV DEBIAN_FRONTEND noninteractive
+
+# Install MCAPL
+WORKDIR $HOME
+RUN git clone https://github.com/mcapl/mcapl.git
+
